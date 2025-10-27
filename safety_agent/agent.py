@@ -132,52 +132,55 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-service_account_info = {
-"project_id": os.getenv("project_id"),
-"private_key_id": os.getenv("private_key_id"),
-"private_key": os.getenv("private_key"),
-"client_email": os.getenv("client_email"),
-"client_id": os.getenv("client_id"),
-"auth_uri": os.getenv("auth_uri"),
-"token_uri": os.getenv("token_uri"),
-"auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
-"client_x509_cert_url": os.getenv("client_x509_cert_url"),
-"universe_domain": os.getenv("universe_domain")
-}
 
 
-if service_account_info:
-    credentials = service_account.Credentials.from_service_account_info(service_account_info)
-else:
-    credentials = None
+
+
+gcp_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID_1")
 LOCATION = os.environ.get("LOCATION")
 STAGING_BUCKET = "gs://"+os.environ.get("GCS_BUCKET_NAME")
 
 print(PROJECT_ID,LOCATION,STAGING_BUCKET)
+credentials = service_account.Credentials.from_service_account_file(gcp_credentials)
 
 # storage.Client(project=PROJECT_ID, credentials=credentials)
 # Initialize Vertex AI with explicit credentials if available
-vertexai.init(credentials=credentials,project=PROJECT_ID, location=LOCATION,staging_bucket=STAGING_BUCKET)
+vertexai.init(project=PROJECT_ID, location=LOCATION,staging_bucket=STAGING_BUCKET,credentials=credentials)
 
 
 app = AdkApp(agent=root_agent)
 
 
+
+
 remote_app = agent_engines.create(
                 agent_engine=app,
-                requirements=[
-                    "google-cloud-documentai",
-                    "vertexai",
-                    "google-adk",
-                    'google-cloud-aiplatform',
-                    'cloudpickle',
-                    'pydantic'
-                ],
+                extra_packages=["embedding_provider.py","bigquery_client.py","gcp_config.py","vectordb_provider.py"],
+                requirements=["google-adk",
+                                "vertexai",
+                                "cloudpickle",
+                                "google-cloud-aiplatform[adk]",
+                                "pydantic",
+
+                                # For using LiteLLM with OpenAI
+                                "litellm",
+                                "openai",
+
+                                "langchain-core",
+                                "langchain-google-firestore",
+                                "langchain-google-vertexai",
+                                
+                                # For your vectordb_provider and embedding_provider
+                                "google-cloud-firestore",
+                                "google-auth",  # Good practice to include for authentication
+                                "python-dotenv"],
                 display_name="safety Agent",
-                description="ADK Agent to help users analyze contract documents for risks",
-                service_account="safety-agent-acc@safety-agent-469708.iam.gserviceaccount.com",
+                
+                description="ADK Agent to help users to information about safely rules and regulations from documents",
                 env_vars={
                     "GCP_PROJECT_ID": os.getenv("GCP_PROJECT_ID"),
                     "GCP_LOCATION": os.getenv("GCP_LOCATION"),
@@ -197,8 +200,20 @@ remote_app = agent_engines.create(
                     "MULTIMODAL_K":"5",
                     "THRESHOLD":"0.6",
                     "OPENAI_API_KEY":os.getenv("OPENAI_API_KEY"),
-                    "GOOGLE_GENAI_USE_VERTEXAI":"0"
-                                                }
+                    "GOOGLE_GENAI_USE_VERTEXAI":"0",
+                    "type": "service_account", # This field is required by from_service_account_info
+                    "project_id": os.getenv("GCP_PROJECT_ID"), # Use the project_id from the class
+                    "private_key_id": os.getenv("private_key_id"),
+                    "private_key": os.getenv("private_key"),
+                    "client_email": os.getenv("client_email"),
+                    "client_id": os.getenv("client_id"),
+                    "auth_uri": os.getenv("auth_uri"),
+                    "token_uri": os.getenv("token_uri"),
+                    "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
+                    "client_x509_cert_url": os.getenv("client_x509_cert_url"),
+                    "universe_domain": os.getenv("universe_domain")
+                                                },
+                                        
 
             )
  

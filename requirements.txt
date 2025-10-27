@@ -1,0 +1,11 @@
+google-adk
+vertexai
+cloudpickle
+google-cloud-aiplatform[adk]
+pydantic
+litellm
+openai
+langchain-core
+langchain-google-firestore
+langchain-google-vertexai
+google-cloud-firestore
