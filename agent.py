@@ -235,7 +235,7 @@ def get_gcp_config():
 
 from google.cloud import firestore
 from google.cloud import aiplatform
-from google.cloud.aiplatform import MatchingEngineIndexEndpoint
+# from google.cloud.aiplatform import MatchingEngineIndexEndpoint
 # from gcp_config import gcp_config
 # from bigquery_client import BigQueryClient
 import numpy as np
@@ -745,7 +745,6 @@ class BigQueryByteStore:
 # main.py
 
 import os
-import asyncio
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 
@@ -870,98 +869,98 @@ root_agent = Agent(
 
 
 
-from google.oauth2 import service_account
-from vertexai import agent_engines
-from vertexai.agent_engines import AdkApp
-from vertexai.preview import reasoning_engines
-import vertexai
-import json
-from dotenv import load_dotenv
-load_dotenv()
+# from google.oauth2 import service_account
+# from vertexai import agent_engines
+# from vertexai.agent_engines import AdkApp
+# from vertexai.preview import reasoning_engines
+# import vertexai
+# import json
+# from dotenv import load_dotenv
+# load_dotenv()
 
 
 
 
 
 
-gcp_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+# gcp_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 
 
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID_1")
-LOCATION = os.environ.get("LOCATION")
-STAGING_BUCKET = "gs://"+os.environ.get("GCS_BUCKET_NAME")
+# PROJECT_ID = os.environ.get("GCP_PROJECT_ID_1")
+# LOCATION = os.environ.get("LOCATION")
+# STAGING_BUCKET = "gs://"+os.environ.get("GCS_BUCKET_NAME")
 
-print(PROJECT_ID,LOCATION,STAGING_BUCKET)
-credentials = service_account.Credentials.from_service_account_file(gcp_credentials)
+# print(PROJECT_ID,LOCATION,STAGING_BUCKET)
+# credentials = service_account.Credentials.from_service_account_file(gcp_credentials)
 
-# storage.Client(project=PROJECT_ID, credentials=credentials)
-# Initialize Vertex AI with explicit credentials if available
-vertexai.init(project=PROJECT_ID, location=LOCATION,staging_bucket=STAGING_BUCKET,credentials=credentials)
-
-
-app = AdkApp(agent=root_agent)
+# # storage.Client(project=PROJECT_ID, credentials=credentials)
+# # Initialize Vertex AI with explicit credentials if available
+# vertexai.init(project=PROJECT_ID, location=LOCATION,staging_bucket=STAGING_BUCKET,credentials=credentials)
 
 
+# app = AdkApp(agent=root_agent)
 
 
-remote_app = agent_engines.create(
-                agent_engine=app,
-                # extra_packages=["embedding_provider.py","bigquery_client.py","gcp_config.py","vectordb_provider.py"],
-                requirements=["google-adk",
-                                "vertexai",
-                                "cloudpickle",
-                                "google-cloud-aiplatform[adk]",
-                                "pydantic",
 
-                                # For using LiteLLM with OpenAI
-                                "litellm",
-                                "openai",
 
-                                "langchain-core",
-                                "langchain-google-firestore",
-                                "langchain-google-vertexai",
+# remote_app = agent_engines.create(
+#                 agent_engine=app,
+#                 # extra_packages=["embedding_provider.py","bigquery_client.py","gcp_config.py","vectordb_provider.py"],
+#                 requirements=["google-adk",
+#                                 "vertexai",
+#                                 "cloudpickle",
+#                                 "google-cloud-aiplatform[adk]",
+#                                 "pydantic",
+
+#                                 # For using LiteLLM with OpenAI
+#                                 "litellm",
+#                                 "openai",
+
+#                                 "langchain-core",
+#                                 "langchain-google-firestore",
+#                                 "langchain-google-vertexai",
                                 
-                                # For your vectordb_provider and embedding_provider
-                                "google-cloud-firestore",
-                                "google-auth",  # Good practice to include for authentication
-                                "python-dotenv"],
-                display_name="safety Agent v2",
+#                                 # For your vectordb_provider and embedding_provider
+#                                 "google-cloud-firestore",
+#                                 "google-auth",  # Good practice to include for authentication
+#                                 "python-dotenv"],
+#                 display_name="safety Agent v2",
                 
-                description="ADK Agent to help users to information about safely rules and regulations from documents",
-                env_vars={
-                    "GCP_PROJECT_ID": os.getenv("GCP_PROJECT_ID"),
-                    "GCP_LOCATION": os.getenv("GCP_LOCATION"),
-                    "AUTH_URI":os.getenv("AUTH_URI"),
-                    "SAFETY_GCP_PROJECT_ID":os.getenv("SAFETY_GCP_PROJECT_ID"),
-                    "VERTEX_AI_LOCATION":os.getenv("VERTEX_AI_LOCATION"),
-                    "BIGQUERY_DATASET":os.getenv("BIGQUERY_DATASET"),
-                    "BIGQUERY_USERS_TABLE":"users",
-                    "BIGQUERY_RATINGS_TABLE":"message_ratings",
-                    "BIGQUERY_BYTESTORE_TABLE":"byte_store",
+#                 description="ADK Agent to help users to information about safely rules and regulations from documents",
+#                 env_vars={
+#                     "GCP_PROJECT_ID": os.getenv("GCP_PROJECT_ID"),
+#                     "GCP_LOCATION": os.getenv("GCP_LOCATION"),
+#                     "AUTH_URI":os.getenv("AUTH_URI"),
+#                     "SAFETY_GCP_PROJECT_ID":os.getenv("SAFETY_GCP_PROJECT_ID"),
+#                     "VERTEX_AI_LOCATION":os.getenv("VERTEX_AI_LOCATION"),
+#                     "BIGQUERY_DATASET":os.getenv("BIGQUERY_DATASET"),
+#                     "BIGQUERY_USERS_TABLE":"users",
+#                     "BIGQUERY_RATINGS_TABLE":"message_ratings",
+#                     "BIGQUERY_BYTESTORE_TABLE":"byte_store",
 
-                    "FIRESTORE_COLLECTION":"safety_documents",
-                    "FIRESTORE_DATABASE":os.getenv("FIRESTORE_DATABASE"),
-                    "FIRESTORE_DOCUMENT_COLLECTION":"safety_documents",
+#                     "FIRESTORE_COLLECTION":"safety_documents",
+#                     "FIRESTORE_DATABASE":os.getenv("FIRESTORE_DATABASE"),
+#                     "FIRESTORE_DOCUMENT_COLLECTION":"safety_documents",
 
-                    "VECTOR_K":"5",
-                    "MULTIMODAL_K":"5",
-                    "THRESHOLD":"0.6",
-                    "OPENAI_API_KEY":os.getenv("OPENAI_API_KEY"),
-                    "GOOGLE_GENAI_USE_VERTEXAI":"0",
-                    "type": "service_account", # This field is required by from_service_account_info
-                    "project_id": os.getenv("GCP_PROJECT_ID"), # Use the project_id from the class
-                    "private_key_id": os.getenv("private_key_id"),
-                    "private_key": os.getenv("private_key"),
-                    "client_email": os.getenv("client_email"),
-                    "client_id": os.getenv("client_id"),
-                    "auth_uri": os.getenv("auth_uri"),
-                    "token_uri": os.getenv("token_uri"),
-                    "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
-                    "client_x509_cert_url": os.getenv("client_x509_cert_url"),
-                    "universe_domain": os.getenv("universe_domain")
-                                                },
+#                     "VECTOR_K":"5",
+#                     "MULTIMODAL_K":"5",
+#                     "THRESHOLD":"0.6",
+#                     "OPENAI_API_KEY":os.getenv("OPENAI_API_KEY"),
+#                     "GOOGLE_GENAI_USE_VERTEXAI":"0",
+#                     "type": "service_account", # This field is required by from_service_account_info
+#                     "project_id": os.getenv("GCP_PROJECT_ID"), # Use the project_id from the class
+#                     "private_key_id": os.getenv("private_key_id"),
+#                     "private_key": os.getenv("private_key"),
+#                     "client_email": os.getenv("client_email"),
+#                     "client_id": os.getenv("client_id"),
+#                     "auth_uri": os.getenv("auth_uri"),
+#                     "token_uri": os.getenv("token_uri"),
+#                     "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
+#                     "client_x509_cert_url": os.getenv("client_x509_cert_url"),
+#                     "universe_domain": os.getenv("universe_domain")
+#                                                 },
                                         
 
-            )
+#             )
  
