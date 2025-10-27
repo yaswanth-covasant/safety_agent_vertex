@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 import openai
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
-import google.generativeai as genai
 
 # Your existing provider and utility functions
 from embedding_provider import vertex_ai_embed_model
@@ -178,7 +177,7 @@ remote_app = agent_engines.create(
                                 "google-cloud-firestore",
                                 "google-auth",  # Good practice to include for authentication
                                 "python-dotenv"],
-                display_name="safety Agent",
+                display_name="safety Agent_v3",
                 
                 description="ADK Agent to help users to information about safely rules and regulations from documents",
                 env_vars={

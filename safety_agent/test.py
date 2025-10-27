@@ -1,37 +1,43 @@
+
 from vertexai import agent_engines
+from google.cloud import aiplatform
+import asyncio
 
 PROJECT_ID = "gcp-agents-personal"
 LOCATION = "us-central1"
+AGENT_ID = "projects/208578852509/locations/us-central1/reasoningEngines/954679558118834176"
 
 
-def query_the_agent():
-    """Sends a single query to the deployed agent to generate a log entry."""
-    print("--- STEP 1: Sending query to the agent ---")
-    try:
-        agent =agent_engines.get('projects/208578852509/locations/us-central1/reasoningEngines/2213435653968887808')
-        session = agent.create_session(user_id="user_1")
-        messages=["hi","How often should PPE be inspected and maintained for chemical handling to ensure it remains effective?"]
-        for message in messages:
-            quer = agent.stream_query(user_id="user_1",session_id=session["id"],message=message)
-            for i in quer:
-                print(i)
-                print("-------------------")
-                
-                
+async def query_agent_async():
+    """Query agent using async methods."""
+    aiplatform.init(project=PROJECT_ID, location=LOCATION)
+    agent = agent_engines.get(AGENT_ID)
+    
+    user_id = "user_1"
+    
+    # Create session
+    session = await agent.async_create_session(user_id=user_id)
+    session_id = session.get("id") or session.get("session_id") or session.get("name")
+    print(f"Session ID: {session_id}\n")
+    
+    messages = [
         
-        session=agent.get_session(user_id="sai",session_id=session["id"])
-        for event in session['events']:
-            print("---------------new event----------------------------------------")
+        "How Can OSHA and NIOSH Help?"
+    ]
+    
+    for message in messages:
+        print(f">>> {message}")
+        async for event in agent.async_stream_query(
+            message=message,
+            user_id=user_id,
+            session_id=session_id
+        ):
             print(event)
-
-    except Exception as e:
-        print(f"ERROR: Failed to query the agent. {e}")
-        print("Please check your agent ID, permissions, and ensure the agent is deployed.\n")
-        return False
-    return True
+            print("-" * 50)
+    
+    # Get final session
+   
 
 
 if __name__ == "__main__":
-    query_the_agent()
-   
-    
+    asyncio.run(query_agent_async())
