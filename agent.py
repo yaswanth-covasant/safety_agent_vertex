@@ -56,6 +56,8 @@ class BigQueryClient:
 
 class GCPConfig:
     _instance = None
+    # firestore_client=None
+    # storage_client=None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -97,11 +99,12 @@ class GCPConfig:
     def _init_clients(self):
         try:
             credentials = self._get_credentials()
-            # Initialize Vertex AI globally for other functions that might need it
-            vertexai.init(project=self.project_id, location=self.location, credentials=credentials)
-            # Initialize specific clients for the config object
             self.firestore_client = firestore.Client(project=self.project_id, credentials=credentials)
             self.storage_client = storage.Client(project=self.project_id, credentials=credentials)
+            # Initialize Vertex AI globally for other functions that might need it
+            print("Initilixing with ",self.project_id, self.location)
+            vertexai.init(project=self.project_id, location="us-central1", credentials=credentials)
+            # Initialize specific clients for the config object
             print("✅ GCP clients initialized successfully!")
         except Exception as e:
             print(f"❌ Error initializing GCP clients: {e}")
@@ -137,6 +140,7 @@ def _get_firestore_vector_store_text(embedding_model):
     class FirestoreVectorStore:
         def __init__(self, embedding_model, collection_name="documents"):
             self.embedding_model = embedding_model
+            get_gcp_config()._init_clients()
             self.collection = get_gcp_config().firestore_client.collection(collection_name)
         
         def similarity_search_with_score(self, query: str, k: int = 5):
