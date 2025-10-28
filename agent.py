@@ -53,24 +53,37 @@ class BigQueryClient:
             raise RuntimeError(f"BigQuery insert errors: {errors}")
 
 # --- GCP Config Class (from gcp_config.py) ---
+
 class GCPConfig:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(GCPConfig, cls).__new__(cls)
-            cls._instance.project_id = os.getenv("SAFETY_GCP_PROJECT_ID", "safety-agent-469708")
-            cls._instance.location = os.getenv("GCP_LOCATION", "us-central1")
-            print(f"🔧 GCP Config Initializing - Project: {cls._instance.project_id}, Location: {cls._instance.location}")
-            cls._instance._init_clients()
+            cls._instance = super().__new__(cls)
         return cls._instance
 
+    def __init__(self):
+        # This check prevents re-initializing the singleton on subsequent calls
+        if hasattr(self, "project_id"):
+            return
+
+        # All initialization logic now lives in __init__
+        self.project_id = os.getenv("SAFETY_GCP_PROJECT_ID", "safety-agent-469708")
+        self.location = os.getenv("GCP_LOCATION", "us-central1")
+        print(f"🔧 GCP Config Initializing - Project: {self.project_id}, Location: {self.location}")
+        self._init_clients()
+
     def _get_credentials(self) -> service_account.Credentials:
+        # NOTE: Using replace('\\n', '\n') is crucial when loading from .env files
+        private_key_env = os.getenv("private_key")
+        if not private_key_env:
+            raise ValueError("The 'private_key' environment variable is not set.")
+        
         service_account_info = {
             "type": "service_account",
             "project_id": self.project_id,
             "private_key_id": os.getenv("private_key_id"),
-            "private_key": os.getenv("private_key").replace('\\n', '\n'), # Fix for env var formatting
+            "private_key": private_key_env.replace('\\n', '\n'),
             "client_email": os.getenv("client_email"),
             "client_id": os.getenv("client_id"),
             "auth_uri": os.getenv("auth_uri"),
@@ -84,7 +97,9 @@ class GCPConfig:
     def _init_clients(self):
         try:
             credentials = self._get_credentials()
-            aiplatform.init(project=self.project_id, location=self.location, credentials=credentials)
+            # Initialize Vertex AI globally for other functions that might need it
+            vertexai.init(project=self.project_id, location=self.location, credentials=credentials)
+            # Initialize specific clients for the config object
             self.firestore_client = firestore.Client(project=self.project_id, credentials=credentials)
             self.storage_client = storage.Client(project=self.project_id, credentials=credentials)
             print("✅ GCP clients initialized successfully!")
@@ -97,6 +112,7 @@ class GCPConfig:
 
 # Global function to access the singleton config instance
 def get_gcp_config():
+    # This will now correctly create and initialize the instance once
     return GCPConfig()
 
 # ==============================================================================
